@@ -49,7 +49,7 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(morgan("combined"));
 app.use(myRouter);
-app.listen(80, "0.0.0.0", function() {
+app.listen(443, "0.0.0.0", function() {
   console.log("Listening");
 });
 const pipeline = [
