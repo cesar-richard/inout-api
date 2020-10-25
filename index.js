@@ -25,6 +25,7 @@ db.once("open", function() {
 
 var logSchema = mongoose.Schema({
   created_at: { type: Date, default: Date.now },
+  room: { type: String },
   kind: { type: String },
   value: { type: Number, default: 1 }
 });
@@ -52,19 +53,28 @@ app.use(myRouter);
 app.listen(3000, "0.0.0.0", function() {
   console.log("Listening");
 });
-const pipeline = [
-  {
+
+const pipelineGroup = {
     $group: {
       _id: "$kind",
-      count: { $sum: 1 }
+      count: {
+        $sum: 1
+      }
     }
-  }
-];
+  };
 
 myRouter
-  .route("/")
+  .route("/rooms/:idRoom")
   .get(function(req, res) {
-    Log.aggregate(pipeline, function(err, results) {
+    const pipelineMatch = {
+      $match: {
+        room: {
+          $eq: req.params.idRoom
+        }
+      }
+    }
+
+    Log.aggregate([pipelineMatch, pipelineGroup], function(err, results) {
       if (err) {
         res.send(err);
       }
@@ -72,8 +82,16 @@ myRouter
     });
   })
   .post(function(req, res) {
-    Log.create({ kind: req.body.kind, value: req.body.value }).then(() => {
-      Log.aggregate(pipeline, function(err, results) {
+    const pipelineMatch = {
+      $match: {
+        room: {
+          $eq: req.params.idRoom
+        }
+      }
+    }
+
+    Log.create({ kind: req.body.kind, value: req.body.value, room: req.params.idRoom }).then(() => {
+      Log.aggregate([pipelineMatch, pipelineGroup], function(err, results) {
         if (err) {
           res.send(err);
         }
